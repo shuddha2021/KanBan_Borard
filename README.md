@@ -11,6 +11,10 @@ Kanban Flowboard is a dynamic and user-friendly web application that empowers in
 - **Modal Task Management**: Detailed task modals allow for in-depth task management, including descriptions, checklists, due dates, and assignment to team members.
 - **Real-Time Collaboration**: Team members can view and edit tasks simultaneously, ensuring everyone is always on the same page.
 
+<img width="1149" alt="Screenshot 2024-04-23 at 10 11 29 AM" src="https://github.com/shuddha2021/Kanban-Flowboard/assets/81951239/5cd63e18-69f3-4bae-8c73-0472cce82d88">
+<img width="1150" alt="Screenshot 2024-04-23 at 10 12 02 AM" src="https://github.com/shuddha2021/Kanban-Flowboard/assets/81951239/bad9d9b9-583b-4d36-a8cf-80245e4c1eb8">
+
+
 ## Technologies Used
 
 - **HTML/CSS**: For structuring and styling the web content and layout.
