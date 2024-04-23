@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Board</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+        }
+
+        .board {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+            overflow-x: auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+        }
+
+        .column {
+            background-color: #ebecf0;
+            border-radius: 6px;
+            width: 300px;
+            padding: 12px;
+            height: fit-content;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .column-header {
+            padding: 10px 12px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #172b4d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .task {
+            background-color: #fff;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            font-size: 14px;
+            transition: box-shadow 0.3s;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task[data-priority="low"] {
+            border-left: 4px solid green;
+        }
+
+        .task[data-priority="medium"] {
+            border-left: 4px solid orange;
+        }
+
+        .task[data-priority="high"] {
+            border-left: 4px solid red;
+        }
+
+        .task:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .task[contenteditable="true"]:focus {
+            outline: 2px solid #0079bf;
+            outline-offset: 2px;
+        }
+
+        .add-task-btn {
+            display: block;
+            text-align: center;
+            padding: 10px 12px;
+            background-color: #ffffff3d;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: auto;
+        }
+
+        .add-task-btn:hover {
+            background-color: #ffffff52;
+        }
+
+        .add-task-input {
+            width: 100%;
+            border: none;
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .add-task-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #0079bf;
+        }
+
+        .delete-btn {
+            background-color: transparent;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            color: #a71d2a;
+        }
+
+        /* Modal for Task Details */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        .close-btn {
+            background-color: transparent;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding-top: 10px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .checklist-item input {
+            margin-right: 10px;
+        }
+
+        .modal-body div {
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="board" id="board">
+    <div class="column" id="todo" ondragover="allowDrop(event)" ondrop="drop(event)">
+        <div class="column-header">To Do</div>
+        <div class="add-task">
+            <input type="text" placeholder="Add a new task" class="add-task-input" id="newTaskInput">
+            <button onclick="addTask('todo')">Add Task</button>
+        </div>
+    </div>
+    <div class="column" id="in-progress" ondragover="allowDrop(event)" ondrop="drop(event)">
+        <div class="column-header">In Progress</div>
+    </div>
+    <div class="column" id="done" ondragover="allowDrop(event)" ondrop="drop(event)">
+        <div class="column-header">Done</div>
+    </div>
+</div>
+
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>Task Details</span>
+            <button class="close-btn" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="taskTitle" placeholder="Task Title" />
+            <textarea id="taskDescription" placeholder="Description" rows="3"></textarea>
+            <div>
+                <label>Priority:</label>
+                <select id="taskPriority">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div>
+                <label>Due Date:</label>
+                <input type="date" id="taskDueDate" />
+            </div>
+            <div>
+                <label>Assigned To:</label>
+                <input type="text" id="taskAssignedTo" placeholder="Assigned User" />
+            </div>
+            <div id="taskChecklist">
+                <h4>Checklist:</h4>
+                <div id="checklistItems"></div>
+                <button onclick="addChecklistItem()">Add Checklist Item</button>
+            </div>
+        </div>
+        <div>
+            <button onclick="saveTaskDetails()">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let taskCounter = 0;
+    let activeTaskId = null;
+
+    const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
+
+    function allowDrop(event) {
+        event.preventDefault();
+    }
+
+    function drag(event) {
+        event.dataTransfer.setData("text/plain", event.target.id);
+    }
+
+    function drop(event) {
+        event.preventDefault();
+        const taskId = event.dataTransfer.getData("text/plain");
+        const task = document.getElementById(taskId);
+        if (event.target.classList.contains("column")) {
+            event.target.appendChild(task);
+        } else {
+            event.target.closest('.column').appendChild(task);
+        }
+        sortTasks(task.closest('.column').id);
+        saveTasks();
+    }
+
+    function addTask(columnId) {
+        const taskInput = document.getElementById("newTaskInput");
+        const taskText = taskInput.value.trim();
+        const column = document.getElementById(columnId);
+
+        if (taskText !== "") {
+            createTask(column, taskText);
+            taskInput.value = "";
+        }
+    }
+
+    function createTask(column, taskName) {
+        const task = document.createElement('div');
+        task.className = 'task';
+        task.id = 'task-' + (++taskCounter);
+        task.setAttribute('draggable', 'true');
+        task.setAttribute('ondragstart', 'drag(event)');
+        task.setAttribute('data-priority', 'medium'); // default priority
+        task.innerHTML = `
+            <span onclick="openTaskDetails('${task.id}')">${taskName}</span>
+            <button class="delete-btn" onclick="deleteTask('${task.id}')"><i class="fas fa-times"></i></button>
+        `;
+
+        column.insertBefore(task, column.lastElementChild);
+        sortTasks(column.id);
+        saveTasks();
+    }
+
+    function saveTasks() {
+        const tasks = document.querySelectorAll('.task');
+        const tasksData = [];
+        tasks.forEach(task => {
+            const id = task.id;
+            const text = task.textContent.trim().split('\n')[0];
+            const columnId = task.closest('.column').id;
+            const priority = task.getAttribute('data-priority') || 'medium';
+            const description = task.getAttribute('data-description') || '';
+            const checklist = task.getAttribute('data-checklist') ? JSON.parse(task.getAttribute('data-checklist')) : [];
+            const dueDate = task.getAttribute('data-due-date') || '';
+            const assignedTo = task.getAttribute('data-assigned-to') || '';
+            tasksData.push({ id, text, columnId, priority, description, checklist, dueDate, assignedTo });
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasksData));
+    }
+
+    function deleteTask(taskId) {
+        const task = document.getElementById(taskId);
+        task.remove();
+        saveTasks();
+    }
+
+    function openTaskDetails(taskId) {
+        const task = document.getElementById(taskId);
+        activeTaskId = taskId;
+
+        const taskText = task.textContent.trim().split('\n')[0];
+        const taskPriority = task.getAttribute('data-priority') || 'medium';
+        const taskDescription = task.getAttribute('data-description') || '';
+        const checklist = task.getAttribute('data-checklist') ? JSON.parse(task.getAttribute('data-checklist')) : [];
+        const taskDueDate = task.getAttribute('data-due-date') || '';
+        const taskAssignedTo = task.getAttribute('data-assigned-to') || '';
+
+        document.getElementById("taskTitle").value = taskText;
+        document.getElementById("taskPriority").value = taskPriority;
+        document.getElementById("taskDescription").value = taskDescription;
+        document.getElementById("taskDueDate").value = taskDueDate;
+        document.getElementById("taskAssignedTo").value = taskAssignedTo;
+
+        const checklistItems = document.getElementById("checklistItems");
+        checklistItems.innerHTML = '';
+
+        checklist.forEach((item, index) => {
+            const checklistItem = document.createElement("div");
+            checklistItem.className = "checklist-item";
+            checklistItem.innerHTML = `
+                <input type="checkbox" ${item.checked ? "checked" : ""} data-index="${index}" onchange="updateChecklistItem(${index})">
+                <input type="text" value="${item.text}" data-index="${index}" onblur="updateChecklistText(${index})">
+            `;
+            checklistItems.appendChild(checklistItem);
+        });
+
+        document.getElementById("taskModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("taskModal").style.display = "none";
+    }
+
+    function saveTaskDetails() {
+        if (!activeTaskId) return;
+
+        const task = document.getElementById(activeTaskId);
+        const taskTitle = document.getElementById("taskTitle").value;
+        const taskPriority = document.getElementById("taskPriority").value;
+        const taskDescription = document.getElementById("taskDescription").value;
+        const taskDueDate = document.getElementById("taskDueDate").value;
+        const taskAssignedTo = document.getElementById("taskAssignedTo").value;
+
+        // Find the span element that contains the task's name and update its text content
+        const taskNameSpan = task.querySelector('span');
+        taskNameSpan.textContent = taskTitle;
+
+        // Update the rest of the task attributes
+        task.setAttribute("data-priority", taskPriority);
+        task.setAttribute("data-description", taskDescription);
+
+        // Update the checklist
+        const checklistItems = document.querySelectorAll(".checklist-item");
+        const checklist = [];
+        checklistItems.forEach((item, index) => {
+            const checkbox = item.querySelector("input[type='checkbox']");
+            const textInput = item.querySelector("input[type='text']");
+            checklist.push({ checked: checkbox.checked, text: textInput.value });
+        });
+        task.setAttribute("data-checklist", JSON.stringify(checklist));
+
+        // Update due date and assigned to
+        task.setAttribute("data-due-date", taskDueDate);
+        task.setAttribute("data-assigned-to", taskAssignedTo);
+
+        // Save all tasks to localStorage
+        saveTasks();
+
+        // Close the modal
+        closeModal();
+    }
+
+    function addChecklistItem() {
+        const checklistItems = document.getElementById("checklistItems");
+
+        const checklistItem = document.createElement("div");
+        checklistItem.className = "checklist-item";
+        checklistItem.innerHTML = `
+            <input type="checkbox">
+            <input type="text" placeholder="Checklist item" onblur="saveTaskDetails()">
+        `;
+
+        checklistItems.appendChild(checklistItem);
+    }
+
+    function updateChecklistItem(index) {
+        saveTaskDetails();
+    }
+
+    function updateChecklistText(index) {
+        saveTaskDetails();
+    }
+
+    function sortTasks(columnId) {
+        const column = document.getElementById(columnId);
+        const tasks = Array.from(column.querySelectorAll('.task'));
+        tasks.sort((a, b) => {
+            const priorityA = a.getAttribute('data-priority');
+            const priorityB = b.getAttribute('data-priority');
+            return priorityOrder[priorityA] - priorityOrder[priorityB];
+        });
+        tasks.forEach(task => column.appendChild(task));
+    }
+
+    window.addEventListener("load", function() {
+        const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+        savedTasks.forEach(task => {
+            const column = document.getElementById(task.columnId);
+            createTask(column, task.text);
+            const newTask = document.getElementById(task.id);
+            newTask.setAttribute("data-priority", task.priority);
+            newTask.setAttribute("data-description", task.description);
+            newTask.setAttribute("data-due-date", task.dueDate);
+            newTask.setAttribute("data-assigned-to", task.assignedTo);
+
+            if (task.checklist && task.checklist.length > 0) {
+                newTask.setAttribute("data-checklist", JSON.stringify(task.checklist));
+            }
+        });
+
+        ['todo', 'in-progress', 'done'].forEach(sortTasks); // Sort tasks in each column after loading
+    });
+
+</script>
+</body>
+</html>
