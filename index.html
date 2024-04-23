@@ -193,7 +193,7 @@
     <div class="column" id="todo" ondragover="allowDrop(event)" ondrop="drop(event)">
         <div class="column-header">To Do</div>
         <div class="add-task">
-            <input type="text" placeholder="Add a new task" class="add-task-input" id="newTaskInput">
+            <input type="text" placeholder="Add a new task" class="add-task-input" id="newTaskInput" onkeypress="handleKeyPress(event)">
             <button onclick="addTask('todo')">Add Task</button>
         </div>
     </div>
@@ -204,6 +204,7 @@
         <div class="column-header">Done</div>
     </div>
 </div>
+
 
 <div id="taskModal" class="modal">
     <div class="modal-content">
@@ -250,6 +251,12 @@
 
     function allowDrop(event) {
         event.preventDefault();
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            addTask('todo');
+        }
     }
 
     function drag(event) {
